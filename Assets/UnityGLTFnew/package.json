@@ -1,0 +1,24 @@
+{
+  "name": "org.khronos.unitygltf",
+  "displayName": "UnityGLTF",
+  "version": "2.5.0-exp",
+  "unity": "2020.3",
+  "description": "Unity3D library for importing and exporting GLTF 2.0 assets. https://github.com/KhronosGroup/UnityGLTF",
+  "repository": {
+    "url": "https://github.com/KhronosGroup/UnityGLTF.git"
+  },
+  "keywords": [
+    "gltf",
+    "khronos",
+    "runtime",
+    "loader",
+    "import",
+    "export"
+  ],
+  "author": "Khronos Group",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "2.0.0",
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.shadergraph": "10.0.0"
+  }
+}
