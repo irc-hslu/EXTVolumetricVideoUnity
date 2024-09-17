@@ -2,11 +2,11 @@
 This is a sample Unity project for the export and import mesh sequence based Volumetric Video glTF file format with [EXT_volumetricvideo](https://github.com/irc-hslu/glTF/tree/EXT_volumetricvideo/extensions/2.0/Vendor/EXT_volumetricvideo). It contains the Volumetric Video glTF exporter/importer modified on top of the official [UnityGLTF plugin](https://github.com/KhronosGroup/UnityGLTF).
 
 ## Exporter
-[SimpleObjToVVgltf](Assets\SimpleObjToVVgltf.unity) is an example scene with [Obj2GltfExport](Assets\VVglTFScript\Obj2GltfExport.cs) component to export glTF with EXT_volumetricvideo from a sequence of 3D mesh OBJ files. 
+[SimpleObjToVVgltf](Assets/SimpleObjToVVgltf.unity) is an example scene with [Obj2GltfExport](Assets/VVglTFScript/Obj2GltfExport.cs) component to export glTF with EXT_volumetricvideo from a sequence of 3D mesh OBJ files. 
 First, put all OBJ mesh files to Assets/Resource folder in this Unity project, enable the Read/Write access of all OBJ files in their inspector. All OBJ files should have same pattern of file name, with incremental index number for that mesh frame, and optional, the same prefix / postfix. 
 Next, find the Obj2GltfExport game object and change the parameters of Obj2GltfExport component, Below is the configuration for Obj2GltfExport component. 
 
-![Obj2GltfExport component](docs\Obj2GltfExport.png).
+![Obj2GltfExport component](docs/Obj2GltfExport.png).
 - <kbd>vol Folder</kbd> set to the name of OBJ mesh folder in Resource folder.
 - Set <kbd>I</kbd> to the first frame number  and <kbd>Iend</kbd> to the last frame number of your OBJ file name.
 - Set <kbd>Obj Name Prefix</kbd> if your OBJ files have the same prefix filename.d
@@ -32,7 +32,7 @@ gltf-transform optimize inputfilename.glb output.glb --compress draco --texture-
 It is important to set --prune-attributes to false, it keep the Volumetric Video mesh frame in the file. 
 
 ## Importer
-[pc](Assets\pc.unity) is an example scene with [VVgltfPlayer](Assets\VVglTFScript\VVgltfPlayer.cs) component to play Volumetric Video glTF. 
+[pc](Assets/pc.unity) is an example scene with [VVgltfPlayer](Assets/VVglTFScript/VVgltfPlayer.cs) component to play Volumetric Video glTF. 
 Below is the configuration for VVgltfPlayer component to play Volumetric Video correctly:
 
 - <kbd>Gltf File Path</kbd>: set the Volumetric Video glTF file path.
