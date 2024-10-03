@@ -7,6 +7,7 @@ using UnityGLTF;
 using System.Runtime.ExceptionServices; 
 using System;  
 using UnityEngine.Networking;
+using static Unity.VisualScripting.Member;
 
 public class VVgltfPlayer : MonoBehaviour
 { 
@@ -42,8 +43,7 @@ public class VVgltfPlayer : MonoBehaviour
     public GameObject nextActive = null;
     bool isMeshAccessListAvaialble = false;
     List<int> meshIDList = null;
-    int preloadFrameCount = 5;
-
+    int preloadFrameCount = 5; 
     void Start()
     {
         if (gltfFilePath != "" || gltflist.Length >= 1)
@@ -70,9 +70,10 @@ public class VVgltfPlayer : MonoBehaviour
             MeshCountLimit = 0;
         }
         fullpathgltf = volFolderPathType.ResolvePath(gltflist[currentVVid]);
+        
         gltfImporter.Dispose();
         gltfImporter = null;
-        gltfImporter = new GLTFSceneImporter(fullpathgltf, nextVvAction);
+        gltfImporter = new GLTFSceneImporter(fullpathgltf,isnode, nextVvAction); 
     }
     void OffAllChild(GameObject target)
     {
@@ -84,14 +85,18 @@ public class VVgltfPlayer : MonoBehaviour
     }
     void setNextLOADED(GameObject loadedObject, ExceptionDispatchInfo ex)
     {
+        Debug.Log("setNextLOADED " + loadedObject.name); 
         Destroy(outGltf);
         outGltf = loadedObject;
         if (isnode)
         {
             OffAllChild(loadedObject);
         }
-        else SetRenderer(loadedObject);
-        videoPlayer.Play();
+        else
+        {
+            SetRenderer(loadedObject); 
+        }
+        videoPlayer.Play(); 
         isfileLoaded = true;   
     } 
     public void SetNewGltfImporter()
@@ -100,9 +105,9 @@ public class VVgltfPlayer : MonoBehaviour
         int loadnodecount = 1;
         if (isnode) loadnodecount = 0;
         if (streamsInMemory != null)
-            gltfImporter = new GLTFSceneImporter(fullpathgltf, initVvAction, loadnodecount, streamsInMemory[0]);
+            gltfImporter = new GLTFSceneImporter(fullpathgltf, isnode, initVvAction, loadnodecount, streamsInMemory[0]);
         else
-            gltfImporter = new GLTFSceneImporter(fullpathgltf, initVvAction, loadnodecount);
+            gltfImporter = new GLTFSceneImporter(fullpathgltf,isnode, initVvAction, loadnodecount);
     }
     public void SetRenderer(GameObject target)
     {
@@ -143,7 +148,7 @@ public class VVgltfPlayer : MonoBehaviour
     public void SetPreMeshLoaded(int meshID)
     {
         Debug.Log("SetPreMeshLoaded" + meshID);
-        if (meshID < gltfImporter.GetMeshCount())
+        if (meshID < gltfImporter.GetMeshCount()-3)
             StartCoroutine(gltfImporter.LoadMesh(meshID + 1, SetPreMeshLoaded));
         else
             StartCoroutine(gltfImporter.LoadMesh(meshID + 1, MeshLoadedVideoPlayAction));
@@ -219,13 +224,14 @@ public class VVgltfPlayer : MonoBehaviour
     {
         if (isfileLoaded)
         {
-            int meshID =   (int)(frameidx) - MeshCountLimit;
+            int meshID = (int)(frameidx) - MeshCountLimit;
             if (isMeshAccessListAvaialble)
             {
                 meshID = meshIDList[meshID];
             }
-            if ((meshID >= (gltfImporter.GetMeshCount()) || frameidx >= (long)(vp.frameCount - 1)) && isSequence)
-            {
+            Debug.Log("meshID " + meshID + " frameidx " + frameidx);
+            if ((meshID >= (gltfImporter.GetMeshCount()) || meshID < 0 || frameidx >= (long)(vp.frameCount - 1)) && isSequence)
+            { 
                 Debug.Log("meshID >= gltfImporter.GetMeshCount() " + meshID + " ,  " + gltfImporter.GetMeshCount());
                 SetVVNextGltf();
             }
@@ -235,6 +241,7 @@ public class VVgltfPlayer : MonoBehaviour
                 {
                     if (outGltf.transform.childCount >= meshID)
                     {
+                        StartCoroutine(gltfImporter.LoadNode(meshID));
                         outGltf.transform.GetChild(lastFrame).gameObject.SetActive(false);
                         outGltf.transform.GetChild(meshID).gameObject.SetActive(true);
                     }
@@ -242,16 +249,18 @@ public class VVgltfPlayer : MonoBehaviour
                 }
                 else
                 {
-                    //if (meshID < gltfImporter.GetMeshCount() && gltfImporter._assetCache.MeshCache[meshID] == null)
-                    //{
-                    //   gltfImporter.LoadMesh(meshID); 
-                    //} 
-                    //_meshFilter.mesh = gltfImporter._assetCache.MeshCache[meshID].LoadedMesh;
-                    StartCoroutine(gltfImporter.LoadMesh(meshID, returnValue =>
+                    if (meshID < gltfImporter.GetMeshCount() && gltfImporter._assetCache.MeshCache[meshID] == null)
                     {
-                        _meshFilter.mesh = returnValue;
+                        gltfImporter.LoadMesh(meshID);
                     }
-                    ));
+                    _meshFilter.mesh = gltfImporter._assetCache.MeshCache[meshID].LoadedMesh;
+                    //vp.Pause();
+                    //StartCoroutine(gltfImporter.LoadMesh(meshID, returnValue =>
+                    //{
+                    //    _meshFilter.mesh = returnValue;
+                    //  vp.Play();
+                    //}
+                    //)); 
 
                 }
             }
@@ -272,9 +281,14 @@ public class VVgltfPlayer : MonoBehaviour
         { 
             advancedID = meshIDList[0];
         }
-        StartCoroutine(gltfImporter.LoadMesh(advancedID, SetPreMeshLoaded));
-       
-        source.Play();
+        if (!isnode)
+        {
+           
+            StartCoroutine(gltfImporter.LoadMesh(advancedID, SetPreMeshLoaded));
+            source.Pause();
+        }
+        else
+            source.Play();
         if (_meshRenderer != null)
         {
 #if UNITY_EDITOR

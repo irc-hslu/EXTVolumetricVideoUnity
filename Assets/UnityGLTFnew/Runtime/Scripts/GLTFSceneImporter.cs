@@ -222,7 +222,7 @@ namespace UnityGLTF
 		/// <summary>
 		/// Whether to keep a CPU-side copy of the mesh after upload to GPU (for example, in case normals/tangents need recalculation)
 		/// </summary>
-		public bool KeepCPUCopyOfMesh = false;
+		public bool KeepCPUCopyOfMesh = true;
 
 		/// <summary>
 		/// Whether to keep a CPU-side copy of the texture after upload to GPU
@@ -271,10 +271,10 @@ namespace UnityGLTF
 
 		protected ImportProgress progressStatus = default(ImportProgress);
 		protected IProgress<ImportProgress> progress = null;
-
+		bool isNodeMode = false;
 		private static ILogger Debug = UnityEngine.Debug.unityLogger;
 		Stream stream;
-		public GLTFSceneImporter(string projectFilePath, Action<GameObject, ExceptionDispatchInfo> onLoadComplete = null, int loadnodeCount = 1, MemoryStream memstream = null)
+		public GLTFSceneImporter(string projectFilePath, bool isnode = false, Action<GameObject, ExceptionDispatchInfo> onLoadComplete = null, int loadnodeCount = 1, MemoryStream memstream = null)
 		{
 			_options = new ImportOptions();
 			_options.DataLoader = new FileLoader(Path.GetDirectoryName(projectFilePath));
@@ -301,7 +301,7 @@ namespace UnityGLTF
 			}
 
 			GLTFParser.ParseJson(stream, out _gltfRoot);
-
+			isNodeMode = isnode;
 			stream.Position = 0;
 			_gltfStream = new GLBStream { Stream = stream, StartPosition = stream.Position };
 			IsMultithreaded = true;
@@ -509,17 +509,21 @@ namespace UnityGLTF
 		{
 			return LoadSceneAsync(sceneIndex, showSceneObj, onLoadComplete).AsCoroutine();
 		}
+        public IEnumerator LoadNode(int nodeIndex)
+        {
+            return LoadNodeAsync(nodeIndex).AsCoroutine();
+        }
 
-		/// <summary>
-		/// Loads a node tree from a glTF file into the LastLoadedScene field
-		/// </summary>
-		/// <param name="nodeIndex">The node index to load from the glTF</param>
-		/// <returns></returns>
-		public async Task LoadNodeAsync(int nodeIndex, CancellationToken cancellationToken)
+        /// <summary>
+        /// Loads a node tree from a glTF file into the LastLoadedScene field
+        /// </summary>
+        /// <param name="nodeIndex">The node index to load from the glTF</param>
+        /// <returns></returns>
+        public async Task LoadNodeAsync(int nodeIndex, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			await SetupLoad(async () =>
 			{
-				CreatedObject = await GetNode(nodeIndex, cancellationToken);
+				CreatedObject = await GetNode(nodeIndex, cancellationToken, 1);
 				InitializeGltfTopLevelObject();
 			});
 		}
@@ -967,9 +971,9 @@ namespace UnityGLTF
 			}
 			*/
 			ConstructLights(nodeObj, node);
-
-			nodeObj.SetActive(true);
-
+			if(isNodeMode)
+				nodeObj.SetActive(false);
+			else nodeObj.SetActive(true);	
 			progressStatus.NodeLoaded++;
 			progress?.Report(progressStatus);
 		}
